@@ -2,6 +2,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum FotosError {
+    #[error("The repository is uninitialized")]
+    RepoUninitialized,
     #[error("An I/O error occurred: {0}")]
     Io(#[from] std::io::Error),
     #[error("An SQLite error occurred: {0}")]

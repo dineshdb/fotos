@@ -1,12 +1,16 @@
 pub use rusqlite::Connection;
-use std::{path::Path, time};
+use std::{
+    fs::exists,
+    path::{Path, PathBuf},
+    time,
+};
 
 use crate::FotosError;
 
 // Embed migration SQL in executable.
 refinery::embed_migrations!("./migrations");
 
-pub fn open_database(path: &Path) -> crate::Result<Connection> {
+pub fn open_database(path: &PathBuf) -> crate::Result<Connection> {
     let mut con = Connection::open(path)?;
     con.pragma_update(None, "synchronous", &"normal")?;
     migrations::runner().run(&mut con)?;
@@ -190,7 +194,11 @@ pub struct FileB3SumCount {
     pub b3sum: String,
 }
 
-pub fn get_files_db(path: &Path) -> Database {
-    std::fs::create_dir_all(path.join(".fs")).unwrap();
-    Database::new(open_database(path.join(".fs").join("files.db").as_path()).unwrap())
+pub fn get_files_db(path: &Path) -> crate::Result<Database> {
+    let fs_dir = path.join("metadata");
+    if !exists(&fs_dir)? {
+        return Err(FotosError::RepoUninitialized);
+    };
+    let files_db = fs_dir.join("files.db").to_path_buf();
+    Ok(Database::new(open_database(&files_db).unwrap()))
 }
