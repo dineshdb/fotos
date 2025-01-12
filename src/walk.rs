@@ -19,6 +19,9 @@ pub fn walk(db: &mut Database, base_dir: &Path, path: &Path) -> anyhow::Result<(
         .filter(|e| e.file_type().map(|t| t.is_file()).unwrap_or(false))
         .filter_map(|entry| {
             let meta = entry.metadata().ok()?;
+            if entry.path().starts_with(".") {
+                return None;
+            }
             Some(db::FileEntry {
                 id: None,
                 path: entry
