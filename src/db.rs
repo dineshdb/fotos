@@ -189,3 +189,7 @@ pub struct FileB3SumCount {
     pub count: i64,
     pub b3sum: String,
 }
+
+pub fn get_files_db(path: &Path) -> Database {
+    Database::new(open_database(path.join(".fs").join("files.db").as_path()).unwrap())
+}

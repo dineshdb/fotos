@@ -1,7 +1,7 @@
 mod flags;
 
 use fotos::{
-    db::{open_database, Database, FileB3Sum},
+    db::{get_files_db, FileB3Sum},
     walk,
 };
 use itertools::Itertools;
@@ -31,8 +31,7 @@ fn main() {
         }
         FotosCmd::Check(_) => {
             println!("Checking {}", dir.display());
-            let mut db =
-                Database::new(open_database(dir.join(".fs").join("files.db").as_path()).unwrap());
+            let mut db = get_files_db(&dir);
             let files = db.get_files().unwrap();
             let mut deleted_files = Vec::new();
             for file in files {
@@ -52,8 +51,7 @@ fn main() {
 }
 
 fn scan_dir(path: &Path) {
-    let mut db = Database::new(open_database(path.join(".fs").join("files.db").as_path()).unwrap());
-
+    let mut db = get_files_db(&path);
     walk(&mut db, path, path).unwrap();
     let mut files = db.get_files_for_b3sum().unwrap();
     while files.len() > 0 {
@@ -75,7 +73,7 @@ fn scan_dir(path: &Path) {
 }
 
 fn find_duplicates(path: &Path) {
-    let db = Database::new(open_database(path.join(".fs").join("files.db").as_path()).unwrap());
+    let db = get_files_db(&path);
     let duplicates = db.get_duplicates().unwrap();
     let grouped = duplicates.iter().into_group_map_by(|r| r.b3sum.clone());
     for (b3sum, files) in &grouped {
