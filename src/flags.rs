@@ -9,6 +9,10 @@ pub mod flags {
             }
             cmd duplicates {
             }
+
+            cmd check {
+
+            }
         }
     }
 }

@@ -102,6 +102,16 @@ impl Database {
         tx.commit().map_err(FotosError::Sqlite)?;
         crate::Result::Ok(())
     }
+
+    pub fn delete_files(&mut self, file_ids: &[u64]) -> crate::Result<()> {
+        let mut stmt = self.con.prepare_cached("DELETE FROM files WHERE id = ?")?;
+        let tx = self.con.unchecked_transaction()?;
+        for file_id in file_ids {
+            stmt.execute([file_id]).map_err(FotosError::Sqlite)?;
+        }
+        tx.commit().map_err(FotosError::Sqlite)?;
+        crate::Result::Ok(())
+    }
     pub fn get_duplicates(&self) -> crate::Result<Vec<FileB3SumRow>> {
         let mut stmt = self.con.prepare(
             r#"SELECT b3sum, COUNT(*) FROM files GROUP BY b3sum HAVING COUNT(*) > 1 ORDER BY b3sum;"#,

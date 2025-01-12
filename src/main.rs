@@ -27,6 +27,22 @@ fn main() {
             println!("Finding duplicates in {}", dir.display());
             find_duplicates(&dir);
         }
+        flags::flags::FotosCmd::Check(_) => {
+            println!("Checking {}", dir.display());
+            let mut db =
+                Database::new(open_database(dir.join(".fs").join("files.db").as_path()).unwrap());
+            let files = db.get_files().unwrap();
+            let mut deleted_files = Vec::new();
+            for file in files {
+                let path = dir.join(PathBuf::from(&file.path));
+                if !path.exists() {
+                    deleted_files.push(file.id.unwrap());
+                }
+            }
+            if deleted_files.len() > 0 {
+                db.delete_files(&deleted_files).unwrap();
+            }
+        }
     }
 }
 
