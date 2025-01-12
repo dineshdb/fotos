@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum FotosError {
+pub enum DDriveError {
     #[error("The repository is uninitialized")]
     RepoUninitialized,
     #[error("An I/O error occurred: {0}")]
@@ -18,4 +18,4 @@ pub enum FotosError {
     SystemTime(#[from] std::time::SystemTimeError),
 }
 
-pub type Result<T> = std::result::Result<T, FotosError>;
+pub type Result<T> = std::result::Result<T, DDriveError>;

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 xflags::xflags! {
-    cmd fotos {
+    cmd ddrive {
         optional -r, --repo repo: PathBuf
         default cmd help {
         }
@@ -33,6 +33,6 @@ xflags::xflags! {
     }
 }
 
-impl Fotos {
+impl Ddrive {
     pub const HELP: &'static str = Self::HELP_;
 }

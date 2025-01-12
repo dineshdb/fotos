@@ -1,16 +1,16 @@
 mod flags;
 
-use flags::{Fotos, FotosCmd};
-use fotos::{
+use ddrive::{
     db::{get_files_db, FileB3Sum},
     walk, Result,
 };
+use flags::{Ddrive, DdriveCmd};
 use itertools::Itertools;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::{Path, PathBuf};
 
 fn main() -> Result<()> {
-    let flags = Fotos::from_env().expect("couldn't parse flags");
+    let flags = Ddrive::from_env().expect("couldn't parse flags");
     let repo_dir = flags
         .repo
         .unwrap_or_else(|| PathBuf::from("."))
@@ -18,15 +18,15 @@ fn main() -> Result<()> {
         .unwrap();
 
     match flags.subcommand {
-        FotosCmd::Scan(_) => {
+        DdriveCmd::Scan(_) => {
             println!("Scanning {}", repo_dir.display());
             scan_dir(&repo_dir)?;
         }
-        FotosCmd::Duplicates(_) => {
+        DdriveCmd::Duplicates(_) => {
             println!("Finding duplicates in {}", repo_dir.display());
             find_duplicates(&repo_dir)?;
         }
-        FotosCmd::Check(_) => {
+        DdriveCmd::Check(_) => {
             println!("Checking {}", repo_dir.display());
             let mut db = get_files_db(&repo_dir)?;
             let files = db.get_files().unwrap();
@@ -41,15 +41,15 @@ fn main() -> Result<()> {
                 db.delete_files(&deleted_files).unwrap();
             }
         }
-        FotosCmd::Help(_) => {
-            println!("{}", Fotos::HELP);
+        DdriveCmd::Help(_) => {
+            println!("{}", Ddrive::HELP);
         }
-        FotosCmd::Init(_) => {
+        DdriveCmd::Init(_) => {
             println!("Initializing {}", repo_dir.display());
             std::fs::create_dir_all(repo_dir.join("objects"))?;
             std::fs::create_dir_all(repo_dir.join("metadata"))?;
         }
-        FotosCmd::Add(add) => {
+        DdriveCmd::Add(add) => {
             println!("Adding files to {}", repo_dir.display());
             let _db = get_files_db(&repo_dir)?;
 
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
                 // - we also need to copy the file to the repo objects
             }
         }
-        FotosCmd::Rm(_) => {
+        DdriveCmd::Rm(_) => {
             println!("Removing files from {}", repo_dir.display());
             todo!("remove files from the repo");
         }
@@ -79,7 +79,7 @@ fn scan_dir(path: &Path) -> Result<()> {
             .par_iter()
             .filter_map(|f| {
                 let path = path.join(PathBuf::from(&f.path));
-                let sum = fotos::b3sum::b3sum(&path).unwrap();
+                let sum = ddrive::b3sum::b3sum(&path).unwrap();
                 Some(FileB3Sum {
                     file_id: f.file_id.unwrap(),
                     b3sum: sum,

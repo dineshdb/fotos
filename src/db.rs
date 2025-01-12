@@ -5,7 +5,7 @@ use std::{
     time,
 };
 
-use crate::FotosError;
+use crate::DDriveError;
 
 // Embed migration SQL in executable.
 refinery::embed_migrations!("./migrations");
@@ -22,7 +22,7 @@ pub fn open_in_memory() -> crate::Result<Connection> {
     let mut con = Connection::open_in_memory()?;
     migrations::runner()
         .run(&mut con)
-        .map_err(FotosError::Migration)?;
+        .map_err(DDriveError::Migration)?;
     Ok(con)
 }
 
@@ -47,9 +47,9 @@ impl Database {
                 file.created_at.to_string(),
                 file.modified_at.to_string(),
             ])
-            .map_err(FotosError::Sqlite)?;
+            .map_err(DDriveError::Sqlite)?;
         }
-        tx.commit().map_err(FotosError::Sqlite)?;
+        tx.commit().map_err(DDriveError::Sqlite)?;
         crate::Result::Ok(())
     }
 
@@ -67,7 +67,7 @@ impl Database {
                     id: row.get(4)?,
                 })
             })
-            .map_err(FotosError::Sqlite)?
+            .map_err(DDriveError::Sqlite)?
             .filter_map(|x| x.ok())
             .collect();
 
@@ -87,7 +87,7 @@ impl Database {
                     size: row.get(2)?,
                 })
             })
-            .map_err(FotosError::Sqlite)?
+            .map_err(DDriveError::Sqlite)?
             .filter_map(|x| x.ok())
             .collect();
 
@@ -101,9 +101,9 @@ impl Database {
         let tx = self.con.unchecked_transaction()?;
         for sum in sums {
             stmt.execute([sum.b3sum.clone(), sum.file_id.to_string()])
-                .map_err(FotosError::Sqlite)?;
+                .map_err(DDriveError::Sqlite)?;
         }
-        tx.commit().map_err(FotosError::Sqlite)?;
+        tx.commit().map_err(DDriveError::Sqlite)?;
         crate::Result::Ok(())
     }
 
@@ -111,9 +111,9 @@ impl Database {
         let mut stmt = self.con.prepare_cached("DELETE FROM files WHERE id = ?")?;
         let tx = self.con.unchecked_transaction()?;
         for file_id in file_ids {
-            stmt.execute([file_id]).map_err(FotosError::Sqlite)?;
+            stmt.execute([file_id]).map_err(DDriveError::Sqlite)?;
         }
-        tx.commit().map_err(FotosError::Sqlite)?;
+        tx.commit().map_err(DDriveError::Sqlite)?;
         crate::Result::Ok(())
     }
     pub fn get_duplicates(&self) -> crate::Result<Vec<FileB3SumRow>> {
@@ -127,7 +127,7 @@ impl Database {
                     count: row.get(1)?,
                 })
             })
-            .map_err(FotosError::Sqlite)?
+            .map_err(DDriveError::Sqlite)?
             .filter_map(|x| x.ok())
             .collect();
 
@@ -151,7 +151,7 @@ impl Database {
                     size: row.get(3)?,
                 })
             })
-            .map_err(FotosError::Sqlite)?
+            .map_err(DDriveError::Sqlite)?
             .filter_map(|x| x.ok())
             .collect();
 
@@ -197,7 +197,7 @@ pub struct FileB3SumCount {
 pub fn get_files_db(path: &Path) -> crate::Result<Database> {
     let fs_dir = path.join("metadata");
     if !exists(&fs_dir)? {
-        return Err(FotosError::RepoUninitialized);
+        return Err(DDriveError::RepoUninitialized);
     };
     let files_db = fs_dir.join("files.db").to_path_buf();
     Ok(Database::new(open_database(&files_db).unwrap()))

@@ -1,6 +1,6 @@
 use crate::{
     db::{self, Database},
-    FotosError,
+    DDriveError,
 };
 use anyhow::Ok;
 use std::{fs, path::Path, time::UNIX_EPOCH};
@@ -35,14 +35,14 @@ pub fn walk(db: &mut Database, base_dir: &Path, path: &Path) -> anyhow::Result<(
                     .created()
                     .ok()?
                     .duration_since(UNIX_EPOCH)
-                    .map_err(FotosError::SystemTime)
+                    .map_err(DDriveError::SystemTime)
                     .ok()?
                     .as_secs(),
                 modified_at: meta
                     .modified()
                     .ok()?
                     .duration_since(UNIX_EPOCH)
-                    .map_err(FotosError::SystemTime)
+                    .map_err(DDriveError::SystemTime)
                     .ok()?
                     .as_secs(),
             })
