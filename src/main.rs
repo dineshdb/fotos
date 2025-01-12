@@ -73,13 +73,9 @@ fn find_duplicates(path: &Path) {
     let db = get_files_db(&path);
     let duplicates = db.get_duplicates().unwrap();
     let grouped = duplicates.iter().into_group_map_by(|r| r.b3sum.clone());
-    for (b3sum, files) in &grouped {
-        let mut b3sum = b3sum.clone().unwrap_or_default();
-        let _ = b3sum.split_off(10);
-        println!("{}:", b3sum);
-        for duplicate in files {
-            println!("  {} {}", duplicate.size, duplicate.path);
-        }
+    for entry in &duplicates {
+        let b3sum = &entry.b3sum.clone().unwrap_or_default();
+        println!("{:.6} {} {}", b3sum, entry.size, entry.path);
     }
 
     let size_saved: u64 = grouped
