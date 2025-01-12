@@ -1,5 +1,6 @@
 mod flags;
 
+use flags::{Fotos, FotosCmd};
 use fotos::{
     db::{get_files_db, FileB3Sum},
     walk,
@@ -7,8 +8,6 @@ use fotos::{
 use itertools::Itertools;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::{Path, PathBuf};
-
-use flags::{Fotos, FotosCmd};
 
 fn main() {
     let flags = Fotos::from_env().expect("couldn't parse flags");
@@ -77,7 +76,9 @@ fn find_duplicates(path: &Path) {
     let duplicates = db.get_duplicates().unwrap();
     let grouped = duplicates.iter().into_group_map_by(|r| r.b3sum.clone());
     for (b3sum, files) in &grouped {
-        println!("{}:", b3sum.clone().unwrap_or_default().split_off(10),);
+        let mut b3sum = b3sum.clone().unwrap_or_default();
+        let _ = b3sum.split_off(10);
+        println!("{}:", b3sum);
         for duplicate in files {
             println!("  {} {}", duplicate.size, duplicate.path);
         }

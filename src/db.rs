@@ -133,7 +133,7 @@ impl Database {
             .collect::<Vec<String>>()
             .join(",");
         let query = format!(
-            "SELECT id, path, b3sum, size FROM files WHERE b3sum IN ({}) ORDER BY b3sum;",
+            "SELECT id, path, b3sum, size FROM files WHERE b3sum IN ({}) ORDER BY size ASC;",
             b3sums,
         );
         let mut stmt = self.con.prepare(&query)?;
