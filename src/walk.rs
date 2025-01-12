@@ -5,8 +5,7 @@ use crate::{
 use anyhow::Ok;
 use std::{fs, path::Path, time::UNIX_EPOCH};
 
-pub fn walk(db: &mut Database, path: &Path) -> anyhow::Result<()> {
-    let pictures = Path::new("/var/home/dineshdb/Pictures");
+pub fn walk(db: &mut Database, base_dir: &Path, path: &Path) -> anyhow::Result<()> {
     let entries: Vec<_> = fs::read_dir(path)?
         .into_iter()
         .filter_map(|f| f.ok())
@@ -24,7 +23,7 @@ pub fn walk(db: &mut Database, path: &Path) -> anyhow::Result<()> {
                 id: None,
                 path: entry
                     .path()
-                    .strip_prefix(pictures)
+                    .strip_prefix(base_dir)
                     .ok()?
                     .to_string_lossy()
                     .to_string(),
@@ -47,7 +46,7 @@ pub fn walk(db: &mut Database, path: &Path) -> anyhow::Result<()> {
         })
         .collect::<Vec<_>>();
     for dir in directories {
-        walk(db, &dir.path())?;
+        walk(db, base_dir, &dir.path())?;
     }
     db.add_files(files.as_slice())?;
 

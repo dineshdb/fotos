@@ -19,7 +19,7 @@ pub fn b3sum(path: &PathBuf) -> io::Result<String> {
     // Finalize the hash and print it
     let hash = hasher.finalize();
 
-    dbg!(format!("{}", hash.to_hex()));
+    dbg!(format!("{} {}", path.display(), hash.to_hex()));
 
     Ok(format!("{}", hash.to_hex()))
 }

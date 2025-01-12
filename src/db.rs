@@ -73,13 +73,14 @@ impl Database {
     pub fn get_files_for_b3sum(&self) -> crate::Result<Vec<FileB3SumRow>> {
         let mut stmt = self
             .con
-            .prepare("SELECT id, path FROM files WHERE b3sum IS NULL LIMIT 30")?;
+            .prepare("SELECT id, path, size FROM files WHERE b3sum IS NULL LIMIT 30")?;
         let rows: Vec<FileB3SumRow> = stmt
             .query_map([], |row| {
                 Ok(FileB3SumRow {
                     file_id: row.get(0).ok(),
                     path: row.get(1)?,
                     b3sum: None,
+                    size: row.get(2)?,
                 })
             })
             .map_err(FotosError::Sqlite)?
@@ -101,7 +102,7 @@ impl Database {
         tx.commit().map_err(FotosError::Sqlite)?;
         crate::Result::Ok(())
     }
-    pub fn get_duplicates(&self) -> crate::Result<Vec<FileB3SumCount>> {
+    pub fn get_duplicates(&self) -> crate::Result<Vec<FileB3SumRow>> {
         let mut stmt = self.con.prepare(
             r#"SELECT b3sum, COUNT(*) FROM files GROUP BY b3sum HAVING COUNT(*) > 1 ORDER BY b3sum;"#,
         )?;
@@ -116,7 +117,31 @@ impl Database {
             .filter_map(|x| x.ok())
             .collect();
 
-        Ok(rows)
+        let b3sums = rows
+            .iter()
+            .map(|x| format!("'{}'", x.b3sum))
+            .collect::<Vec<String>>()
+            .join(",");
+        let query = format!(
+            "SELECT id, path, b3sum, size FROM files WHERE b3sum IN ({}) ORDER BY b3sum;",
+            b3sums,
+        );
+        let mut stmt = self.con.prepare(&query)?;
+
+        let files: Vec<FileB3SumRow> = stmt
+            .query_map([], |row| {
+                Ok(FileB3SumRow {
+                    file_id: row.get(0).ok(),
+                    path: row.get(1)?,
+                    b3sum: row.get(2).ok().unwrap(),
+                    size: row.get(3)?,
+                })
+            })
+            .map_err(FotosError::Sqlite)?
+            .filter_map(|x| x.ok())
+            .collect();
+
+        Ok(files)
     }
 
     pub fn backup(&self, conn: &mut Connection) -> crate::Result<()> {
@@ -140,6 +165,7 @@ pub struct FileB3SumRow {
     pub file_id: Option<i64>,
     pub b3sum: Option<String>,
     pub path: String,
+    pub size: u64,
 }
 
 #[derive(Debug)]
