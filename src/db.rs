@@ -191,5 +191,6 @@ pub struct FileB3SumCount {
 }
 
 pub fn get_files_db(path: &Path) -> Database {
+    std::fs::create_dir_all(path.join(".fs")).unwrap();
     Database::new(open_database(path.join(".fs").join("files.db").as_path()).unwrap())
 }

@@ -19,12 +19,10 @@ fn main() {
 
     match flags.subcommand {
         FotosCmd::Scan(_) => {
-            std::fs::create_dir_all(dir.join(".fs")).unwrap();
             println!("Scanning {}", dir.display());
             scan_dir(&dir);
         }
         FotosCmd::Duplicates(_) => {
-            std::fs::create_dir_all(dir.join(".fs")).unwrap();
             println!("Finding duplicates in {}", dir.display());
             find_duplicates(&dir);
         }
