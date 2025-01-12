@@ -1,4 +1,3 @@
-use std::path::{Path, PathBuf};
 mod flags;
 
 use fotos::{
@@ -7,9 +6,12 @@ use fotos::{
 };
 use itertools::Itertools;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use std::path::{Path, PathBuf};
+
+use flags::{Fotos, FotosCmd};
 
 fn main() {
-    let flags = flags::flags::Fotos::from_env().expect("couldn't parse flags");
+    let flags = Fotos::from_env().expect("couldn't parse flags");
     let dir = flags
         .path
         .unwrap_or_else(|| PathBuf::from("."))
@@ -17,17 +19,17 @@ fn main() {
         .unwrap();
 
     match flags.subcommand {
-        flags::flags::FotosCmd::Scan(_) => {
+        FotosCmd::Scan(_) => {
             std::fs::create_dir_all(dir.join(".fs")).unwrap();
             println!("Scanning {}", dir.display());
             scan_dir(&dir);
         }
-        flags::flags::FotosCmd::Duplicates(_) => {
+        FotosCmd::Duplicates(_) => {
             std::fs::create_dir_all(dir.join(".fs")).unwrap();
             println!("Finding duplicates in {}", dir.display());
             find_duplicates(&dir);
         }
-        flags::flags::FotosCmd::Check(_) => {
+        FotosCmd::Check(_) => {
             println!("Checking {}", dir.display());
             let mut db =
                 Database::new(open_database(dir.join(".fs").join("files.db").as_path()).unwrap());
@@ -42,6 +44,9 @@ fn main() {
             if deleted_files.len() > 0 {
                 db.delete_files(&deleted_files).unwrap();
             }
+        }
+        FotosCmd::Help(_) => {
+            println!("{}", Fotos::HELP);
         }
     }
 }
